@@ -16,6 +16,8 @@ export default class PathfindingState {
             this.grafo = null;
             this.finished = false;
             this.algoritmo = new PathfindingAlgorithm();
+            this.centroCirculo = null;
+            this.radioKm = null;
             PathfindingState.#instancia = this;
         }
     
@@ -33,6 +35,28 @@ export default class PathfindingState {
      */
     obtenerNodo(id) {
         return this.grafo?.obtenerNodo(id);
+    }
+
+    /**
+     * Verifica si un nodo está dentro del círculo del área de búsqueda
+     * @param {import("./Node").default} nodo 
+     * @returns {Boolean}
+     */
+    nodoEnArea(nodo) {
+        if (!this.centroCirculo || !this.radioKm) return true;
+        
+        const lat1 = this.centroCirculo.lat * Math.PI / 180;
+        const lat2 = nodo.latitud * Math.PI / 180;
+        const deltaLat = (nodo.latitud - this.centroCirculo.lat) * Math.PI / 180;
+        const deltaLon = (nodo.longitud - this.centroCirculo.lon) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distanciaKm = 6371 * c;
+
+        return distanciaKm <= this.radioKm;
     }
 
     /**

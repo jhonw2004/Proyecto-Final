@@ -34,7 +34,7 @@ class DFS extends PathfindingAlgorithm {
         );
         if(aristaRef) aristaRef.visitado = true;
 
-        // Encontró el nodo final
+        // Encontró el nodo final - detener búsqueda
         if (nodoActual.id === this.nodoFin.id) {
             this.pila = [];
             this.finished = true;

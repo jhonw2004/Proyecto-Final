@@ -26,6 +26,7 @@ function Map() {
     const [configuracion, setConfiguracion] = useState({ algoritmo: "astar", radio: 4, velocidad: 5 });
     const [colores, setColores] = useState(INITIAL_COLORS);
     const [estadoVista, setEstadoVista] = useState(INITIAL_VIEW_STATE);
+    const [mostrarRadio, setMostrarRadio] = useState(true);
     const ui = useRef();
     const refTiempoAnterior = useRef();
     const temporizador = useRef(0);
@@ -58,9 +59,11 @@ function Map() {
                 setCargandoNodoInicio(false);
                 setRadioSeleccion([{ contour: circulo }]);
                 estado.current.grafo = grafo;
+                estado.current.centroCirculo = { lat: e.coordinate[1], lon: e.coordinate[0] };
+                estado.current.radioKm = radio ?? configuracion.radio;
                 clearTimeout(manejadorCarga);
                 setCargando(false);
-                ui.current.showSnack("Nodo inicial seleccionado. Ahora selecciona el nodo final dentro del área verde.", "success");
+                ui.current.showSnack("Nodo inicial seleccionado. Ahora selecciona el nodo final dentro del área.", "success");
 
             } catch (error) {
                 console.error("Error al cargar el nodo inicial:", error);
@@ -91,7 +94,13 @@ function Map() {
 
         const nodoFinalReal = estado.current.obtenerNodo(nodo.id);
         if(!nodoFinalReal) {
-            ui.current.showSnack("El nodo final debe estar dentro del área verde. Intenta más cerca del punto inicial.", "warning");
+            ui.current.showSnack("El nodo final debe estar dentro del área. Intenta más cerca del punto inicial.", "warning");
+            return;
+        }
+
+        // Validar que el nodo final esté dentro del radio
+        if(!estado.current.nodoEnArea(nodoFinalReal)) {
+            ui.current.showSnack("El nodo final debe estar dentro del área delimitada. Intenta más cerca del punto inicial.", "warning");
             return;
         }
         
@@ -319,17 +328,23 @@ function Map() {
                     controller={{ doubleClickZoom: false, keyboard: false }}
                     onClick={clicMapa}
                 >
-                    <PolygonLayer 
-                        id={"selection-radius"}
-                        data={radioSeleccion}
-                        pickable={true}
-                        stroked={true}
-                        getPolygon={d => d.contour}
-                        getFillColor={[80, 210, 0, 10]}
-                        getLineColor={[9, 142, 46, 175]}
-                        getLineWidth={3}
-                        opacity={0.6}
-                    />
+                    {mostrarRadio && (
+                        <PolygonLayer 
+                            id={"selection-radius"}
+                            data={radioSeleccion}
+                            pickable={true}
+                            stroked={true}
+                            getPolygon={d => d.contour}
+                            getFillColor={[...colores.startNodeBorder.slice(0, 3), 25]}
+                            getLineColor={[...colores.startNodeBorder.slice(0, 3), 200]}
+                            getLineWidth={4}
+                            opacity={0.7}
+                            updateTriggers={{
+                                getFillColor: colores.startNodeBorder,
+                                getLineColor: colores.startNodeBorder
+                            }}
+                        />
+                    )}
                     <TripsLayer
                         id={"pathfinding-layer"}
                         data={datosViajes}
@@ -391,6 +406,8 @@ function Map() {
                 cinematic={cinematico}
                 setCinematic={setCinematico}
                 changeRadius={cambiarRadio}
+                mostrarRadio={mostrarRadio}
+                setMostrarRadio={setMostrarRadio}
             />
 
         </>

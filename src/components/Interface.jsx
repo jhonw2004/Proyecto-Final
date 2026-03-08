@@ -1,4 +1,4 @@
-import { Button, IconButton, Typography, Snackbar, Alert, CircularProgress, Fade, Tooltip, Drawer, MenuItem, Select, InputLabel, FormControl, Menu } from "@mui/material";
+import { Button, IconButton, Typography, Snackbar, Alert, CircularProgress, Fade, Tooltip, Drawer, MenuItem, Select, InputLabel, FormControl, Menu, Switch, FormControlLabel } from "@mui/material";
 import { MuiColorInput } from "mui-color-input";
 import { PlayArrow, Settings, Pause, Replay } from "@mui/icons-material";
 import Slider from "./Slider";
@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "re
 import { INITIAL_COLORS, LOCATIONS } from "../config";
 import { arrayToRgb, rgbToArray } from "../helpers";
 
-const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, time, maxTime, settings, colors, loading, timeChanged, cinematic, changeRadius, changeAlgorithm, setCinematic, setSettings, setColors, startPathfinding, toggleAnimation, clearPath, changeLocation }, ref) => {
+const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, time, maxTime, settings, colors, loading, timeChanged, cinematic, changeRadius, changeAlgorithm, setCinematic, setSettings, setColors, startPathfinding, toggleAnimation, clearPath, changeLocation, mostrarRadio, setMostrarRadio }, ref) => {
     const [sidebar, setSidebar] = useState(false);
     const [snack, setSnack] = useState({
         open: false,
@@ -261,6 +261,25 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
                         />
                     </div>
 
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={mostrarRadio}
+                                onChange={(e) => setMostrarRadio(e.target.checked)}
+                                sx={{
+                                    "& .MuiSwitch-switchBase.Mui-checked": {
+                                        color: "#10b981",
+                                    },
+                                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                        backgroundColor: "#10b981",
+                                    },
+                                }}
+                            />
+                        }
+                        label={<Typography className="text-sm text-zinc-300">Mostrar radio del área</Typography>}
+                        style={{ marginLeft: 0 }}
+                    />
+
                     <div className="flex flex-col gap-4">
                         <Typography style={{ color: "#71717a", textTransform: "uppercase", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em" }} >
                             Estilos
@@ -280,7 +299,7 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
 
                         <div>
                             <Typography id="start-border-label" className="text-sm mb-2 text-zinc-300">
-                                Color del borde del nodo inicial
+                                Color del área del radio de alcance
                             </Typography>
                             <div className="flex gap-2 items-center">
                                 <MuiColorInput value={arrayToRgb(colors.startNodeBorder)} onChange={v => {setColors({...colors, startNodeBorder: rgbToArray(v)});}} aria-labelledby="start-border-label" style={{ backgroundColor: "#18181b", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.08)" }} />
