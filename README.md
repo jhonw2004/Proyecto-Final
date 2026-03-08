@@ -12,7 +12,7 @@ Aplicación web interactiva para visualizar algoritmos de búsqueda de caminos (
 
 1. Clonar el repositorio
 ```bash
-git clone https://github.com/jhonw2004/Mapa_Algoritmos_AI.git
+git clone https://github.com/jhonw2004/Proyecto-Final.git
 cd Mapa_Algoritmos
 ```
 
