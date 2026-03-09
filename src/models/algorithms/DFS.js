@@ -16,6 +16,7 @@ class DFS extends PathfindingAlgorithm {
     nextStep() {
         if (this.pila.length === 0) {
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [];
         }
 
@@ -28,6 +29,7 @@ class DFS extends PathfindingAlgorithm {
         }
         
         nodoActual.visitado = true;
+        this.nodosExplorados++;
         
         const aristaRef = nodoActual.aristas.find(a => 
             a.obtenerOtroNodo(nodoActual) === nodoActual.referente
@@ -38,6 +40,7 @@ class DFS extends PathfindingAlgorithm {
         if (nodoActual.id === this.nodoFin.id) {
             this.pila = [];
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [nodoActual];
         }
 

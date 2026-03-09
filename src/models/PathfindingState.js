@@ -105,4 +105,32 @@ export default class PathfindingState {
 
         return nodosActualizados;
     }
+
+    /**
+     * Calcula la longitud del camino encontrado
+     * @returns {Number} longitud del camino en kilómetros
+     */
+    calcularLongitudCamino() {
+        if(!this.nodoFin || !this.nodoFin.padre) return 0;
+
+        let longitud = 0;
+        let nodoActual = this.nodoFin;
+
+        while(nodoActual.padre) {
+            const lat1 = nodoActual.latitud * Math.PI / 180;
+            const lat2 = nodoActual.padre.latitud * Math.PI / 180;
+            const deltaLat = (nodoActual.padre.latitud - nodoActual.latitud) * Math.PI / 180;
+            const deltaLon = (nodoActual.padre.longitud - nodoActual.longitud) * Math.PI / 180;
+
+            const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                      Math.cos(lat1) * Math.cos(lat2) *
+                      Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            longitud += 6371 * c;
+
+            nodoActual = nodoActual.padre;
+        }
+
+        return longitud;
+    }
 }

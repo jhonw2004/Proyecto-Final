@@ -1,12 +1,12 @@
-import { Button, IconButton, Typography, Snackbar, Alert, CircularProgress, Fade, Tooltip, Drawer, MenuItem, Select, InputLabel, FormControl, Menu, Switch, FormControlLabel } from "@mui/material";
+import { Button, IconButton, Typography, Snackbar, Alert, CircularProgress, Fade, Tooltip, Drawer, MenuItem, Select, InputLabel, FormControl, Menu, Switch, FormControlLabel, Dialog, DialogTitle, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Collapse } from "@mui/material";
 import { MuiColorInput } from "mui-color-input";
-import { PlayArrow, Settings, Pause, Replay } from "@mui/icons-material";
+import { PlayArrow, Settings, Pause, Replay, CompareArrows, Close, Stop, ExpandMore, ExpandLess } from "@mui/icons-material";
 import Slider from "./Slider";
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { INITIAL_COLORS, LOCATIONS } from "../config";
 import { arrayToRgb, rgbToArray } from "../helpers";
 
-const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, time, maxTime, settings, colors, loading, timeChanged, cinematic, changeRadius, changeAlgorithm, setCinematic, setSettings, setColors, startPathfinding, toggleAnimation, clearPath, changeLocation, mostrarRadio, setMostrarRadio }, ref) => {
+const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, time, maxTime, settings, colors, loading, timeChanged, cinematic, changeRadius, changeAlgorithm, setCinematic, setSettings, setColors, startPathfinding, toggleAnimation, clearPath, changeLocation, mostrarRadio, setMostrarRadio, modoComparacion, entrarModoComparacion, salirModoComparacion, iniciarComparacion, detenerComparacion, resultadosComparacion, ejecutandoComparacion }, ref) => {
     const [sidebar, setSidebar] = useState(false);
     const [snack, setSnack] = useState({
         open: false,
@@ -15,10 +15,17 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
     });
     const [helper, setHelper] = useState(false);
     const [menuAnchor, setMenuAnchor] = useState(null);
+    const [tablaVisible, setTablaVisible] = useState(true);
     const menuOpen = Boolean(menuAnchor);
     const helperTime = useRef(4800);
     const rightDown = useRef(false);
     const leftDown = useRef(false);
+
+    const nombresAlgoritmos = {
+        astar: "A*",
+        bfs: "BFS",
+        dfs: "DFS"
+    };
 
     // Expose showSnack to parent from ref
     useImperativeHandle(ref, () => ({
@@ -86,6 +93,13 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
         }, 200);
     }, [cinematic]);
 
+    // Resetear tabla cuando se sale del modo comparación
+    useEffect(() => {
+        if (!modoComparacion) {
+            setTablaVisible(true);
+        }
+    }, [modoComparacion]);
+
     return (
         <>
             <div className={`fixed left-0 top-6 right-0 flex justify-center items-center gap-6 pointer-events-none transition-all duration-500 ease-out ${cinematic ? "-translate-y-[200%] opacity-0" : ""} max-[991px]:flex-wrap-reverse max-[991px]:top-[5px] max-[991px]:text-sm max-[991px]:gap-y-2.5 max-[991px]:gap-x-5`}>
@@ -119,9 +133,16 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
                         : <Pause style={{ color: "#fff", width: 30, height: 30 }} fontSize="inherit" />
                     }
                 </IconButton>
-                <div className="w-auto max-[991px]:w-auto">
-                    <Button disabled={!animationEnded && started} onClick={clearPath} style={{ color: "#e4e4e7", backgroundColor: "#27272a", paddingInline: 28, paddingBlock: 12, borderRadius: 14, fontSize: 15, fontWeight: 500, border: "1px solid rgba(255, 255, 255, 0.08)" }} variant="contained" className="pointer-events-auto shadow-lg hover:bg-[#3f3f46] transition-colors">Limpiar ruta</Button>
-                </div>
+                {!modoComparacion && (
+                    <div className="w-auto max-[991px]:w-auto">
+                        <Button disabled={!animationEnded && started} onClick={clearPath} style={{ color: "#e4e4e7", backgroundColor: "#27272a", paddingInline: 28, paddingBlock: 12, borderRadius: 14, fontSize: 15, fontWeight: 500, border: "1px solid rgba(255, 255, 255, 0.08)" }} variant="contained" className="pointer-events-auto shadow-lg hover:bg-[#3f3f46] transition-colors">Limpiar ruta</Button>
+                    </div>
+                )}
+                {modoComparacion && (
+                    <div className="w-auto max-[991px]:w-auto">
+                        <Button onClick={salirModoComparacion} style={{ color: "#e4e4e7", backgroundColor: "#dc2626", paddingInline: 28, paddingBlock: 12, borderRadius: 14, fontSize: 15, fontWeight: 500, border: "1px solid rgba(255, 255, 255, 0.08)" }} variant="contained" className="pointer-events-auto shadow-lg hover:bg-[#b91c1c] transition-colors">Salir del Modo Comparación</Button>
+                    </div>
+                )}
             </div>
 
             <div className={`fixed left-6 top-6 flex gap-3 transition-all duration-500 ease-out ${cinematic ? "-translate-x-[250%] -translate-y-[250%] opacity-0 pointer-events-none" : ""} max-[991px]:flex-col max-[991px]:h-full max-[991px]:justify-end max-[991px]:top-auto max-[991px]:bottom-5`}>
@@ -130,6 +151,13 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
                         <Settings style={{ color: "#e4e4e7", width: 22, height: 22 }} fontSize="inherit" />
                     </IconButton>
                 </Tooltip>
+                {!modoComparacion && (
+                    <Tooltip title="Modo Comparación">
+                        <IconButton onClick={entrarModoComparacion} style={{ backgroundColor: "#18181b", width: 48, height: 48, boxShadow: "0 4px 12px rgba(0,0,0,0.4)", border: "1px solid rgba(255, 255, 255, 0.08)" }} size="large" className="hover:bg-[#27272a] transition-colors">
+                            <CompareArrows style={{ color: "#e4e4e7", width: 22, height: 22 }} fontSize="inherit" />
+                        </IconButton>
+                    </Tooltip>
+                )}
             </div>
 
             <div className="absolute right-6 bottom-[10vh]">
@@ -185,6 +213,14 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
             >
                 <div className="flex flex-col min-w-[320px] p-6 gap-6 basis-full">
 
+                    {modoComparacion && (
+                        <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-lg p-3">
+                            <Typography style={{ color: "#3b82f6", fontSize: 13, fontWeight: 500, textAlign: "center" }}>
+                                Modo Comparación Activo
+                            </Typography>
+                        </div>
+                    )}
+
                     <FormControl variant="filled">
                         <InputLabel style={{ fontSize: 14, color: "#71717a" }} id="algo-select">Algoritmo</InputLabel>
                         <Select
@@ -195,7 +231,7 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
                             style={{ backgroundColor: "#18181b", color: "#e4e4e7", width: "100%", paddingLeft: 1, borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.08)" }}
                             inputProps={{MenuProps: {MenuListProps: {sx: {backgroundColor: "#18181b", border: "1px solid rgba(255, 255, 255, 0.08)"}}}}}
                             size="small"
-                            disabled={!animationEnded && started}
+                            disabled={(!animationEnded && started) || modoComparacion}
                         >
                             <MenuItem value={"astar"}>Algoritmo A*</MenuItem>
                             <MenuItem value={"bfs"}>Búsqueda en Amplitud (BFS)</MenuItem>
@@ -377,6 +413,125 @@ const Interface = forwardRef(({ canStart, started, animationEnded, playbackOn, t
                     </div>
                 </div>
             </Drawer>
+
+            {modoComparacion && (
+                <div className={`fixed right-6 bottom-6 flex flex-col gap-3 transition-all duration-500 ease-out ${cinematic ? "translate-x-[250%] translate-y-[250%] opacity-0 pointer-events-none" : ""}`}>
+                    <Tooltip title={ejecutandoComparacion ? "Detener Comparación" : "Iniciar Comparación"}>
+                        <Button
+                            disabled={!canStart && !ejecutandoComparacion}
+                            onClick={() => {
+                                if (ejecutandoComparacion) {
+                                    detenerComparacion();
+                                } else {
+                                    iniciarComparacion();
+                                }
+                            }}
+                            variant="contained"
+                            style={{
+                                backgroundColor: ejecutandoComparacion ? "#dc2626" : "#3b82f6",
+                                color: "#fff",
+                                paddingInline: 24,
+                                paddingBlock: 14,
+                                borderRadius: 14,
+                                fontSize: 15,
+                                fontWeight: 500,
+                                boxShadow: ejecutandoComparacion ? "0 8px 24px 0 rgba(220, 38, 38, 0.35)" : "0 8px 24px 0 rgba(59, 130, 246, 0.35)"
+                            }}
+                            startIcon={ejecutandoComparacion ? <Stop /> : <CompareArrows />}
+                            className={ejecutandoComparacion ? "hover:bg-[#b91c1c] transition-colors" : "hover:bg-[#2563eb] transition-colors"}
+                        >
+                            {ejecutandoComparacion ? "Detener" : "Comparar Algoritmos"}
+                        </Button>
+                    </Tooltip>
+                </div>
+            )}
+
+            {modoComparacion && resultadosComparacion.length > 0 && (
+                <>
+                    {!tablaVisible && (
+                        <div className={`fixed left-6 bottom-6 transition-all duration-500 ease-out ${cinematic ? "-translate-x-[250%] translate-y-[250%] opacity-0 pointer-events-none" : ""}`}>
+                            <Tooltip title="Mostrar Resultados">
+                                <Button
+                                    onClick={() => setTablaVisible(true)}
+                                    variant="contained"
+                                    style={{
+                                        backgroundColor: "#3b82f6",
+                                        color: "#fff",
+                                        paddingInline: 20,
+                                        paddingBlock: 12,
+                                        borderRadius: 14,
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        boxShadow: "0 8px 24px 0 rgba(59, 130, 246, 0.35)"
+                                    }}
+                                    className="hover:bg-[#2563eb] transition-colors"
+                                >
+                                    Ver Resultados ({resultadosComparacion.length}/3)
+                                </Button>
+                            </Tooltip>
+                        </div>
+                    )}
+                    {tablaVisible && (
+                        <div className={`fixed left-6 bottom-6 transition-all duration-500 ease-out ${cinematic ? "-translate-x-[250%] translate-y-[250%] opacity-0 pointer-events-none" : ""}`}>
+                            <div className="bg-[#09090b]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden" style={{ minWidth: "600px", maxWidth: "700px" }}>
+                                <div 
+                                    className="flex justify-between items-center px-5 py-3 bg-[#18181b] border-b border-white/5 cursor-pointer hover:bg-[#27272a] transition-colors"
+                                    onClick={() => setTablaVisible(!tablaVisible)}
+                                >
+                                    <Typography style={{ color: "#e4e4e7", fontWeight: 600, fontSize: 15 }}>
+                                        Resultados de Comparación ({resultadosComparacion.length}/3)
+                                    </Typography>
+                                    <IconButton size="small" style={{ color: "#e4e4e7" }}>
+                                        {tablaVisible ? <ExpandMore /> : <ExpandLess />}
+                                    </IconButton>
+                                </div>
+                                <Collapse in={tablaVisible}>
+                                    <div className="p-4">
+                                        {ejecutandoComparacion && (
+                                            <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-lg">
+                                                <CircularProgress size={20} style={{ color: "#3b82f6" }} />
+                                                <Typography style={{ color: "#3b82f6", fontSize: 13 }}>
+                                                    Ejecutando comparación...
+                                                </Typography>
+                                            </div>
+                                        )}
+                                        <TableContainer component={Paper} style={{ backgroundColor: "#18181b", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                                            <Table size="small">
+                                                <TableHead>
+                                                    <TableRow style={{ backgroundColor: "#27272a" }}>
+                                                        <TableCell style={{ color: "#e4e4e7", fontWeight: 600, borderBottom: "1px solid rgba(255, 255, 255, 0.08)", fontSize: 13 }}>Algoritmo</TableCell>
+                                                        <TableCell align="right" style={{ color: "#e4e4e7", fontWeight: 600, borderBottom: "1px solid rgba(255, 255, 255, 0.08)", fontSize: 13 }}>Tiempo (ms)</TableCell>
+                                                        <TableCell align="right" style={{ color: "#e4e4e7", fontWeight: 600, borderBottom: "1px solid rgba(255, 255, 255, 0.08)", fontSize: 13 }}>Nodos</TableCell>
+                                                        <TableCell align="right" style={{ color: "#e4e4e7", fontWeight: 600, borderBottom: "1px solid rgba(255, 255, 255, 0.08)", fontSize: 13 }}>Camino (km)</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {resultadosComparacion.map((resultado) => (
+                                                        <TableRow key={resultado.algoritmo} style={{ backgroundColor: "#18181b" }}>
+                                                            <TableCell style={{ color: "#e4e4e7", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", fontSize: 13 }}>
+                                                                {nombresAlgoritmos[resultado.algoritmo]}
+                                                            </TableCell>
+                                                            <TableCell align="right" style={{ color: "#a1a1aa", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", fontSize: 13 }}>
+                                                                {resultado.tiempoEjecucion.toFixed(2)}
+                                                            </TableCell>
+                                                            <TableCell align="right" style={{ color: "#a1a1aa", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", fontSize: 13 }}>
+                                                                {resultado.nodosExplorados.toLocaleString()}
+                                                            </TableCell>
+                                                            <TableCell align="right" style={{ color: "#a1a1aa", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", fontSize: 13 }}>
+                                                                {resultado.longitudCamino.toFixed(2)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </div>
+                                </Collapse>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
         </>
     );
 });

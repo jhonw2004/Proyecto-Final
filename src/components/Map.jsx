@@ -27,6 +27,11 @@ function Map() {
     const [colores, setColores] = useState(INITIAL_COLORS);
     const [estadoVista, setEstadoVista] = useState(INITIAL_VIEW_STATE);
     const [mostrarRadio, setMostrarRadio] = useState(true);
+    const [modoComparacion, setModoComparacion] = useState(false);
+    const [resultadosComparacion, setResultadosComparacion] = useState([]);
+    const [ejecutandoComparacion, setEjecutandoComparacion] = useState(false);
+    const comparacionActiva = useRef(false);
+    const animacionTerminadaRef = useRef(false);
     const ui = useRef();
     const refTiempoAnterior = useRef();
     const temporizador = useRef(0);
@@ -38,6 +43,7 @@ function Map() {
     async function clicMapa(e, _info, radio = null) {
         if(iniciado && !animacionTerminada) return;
         if(cargandoNodoInicio) return;
+        if(ejecutandoComparacion) return;
 
         // Si no hay nodo inicial, establecer el nodo inicial
         if(!nodoInicio) {
@@ -150,12 +156,110 @@ function Map() {
         nodoTraza.current = null;
         nodoTraza2.current = null;
         setAnimacionTerminada(false);
+        animacionTerminadaRef.current = false;
         if (resetNodos) {
             setNodoInicio(null);
             setNodoFin(null);
             setRadioSeleccion([]);
             setCargandoNodoInicio(false);
+            setModoComparacion(false);
+            setResultadosComparacion([]);
+            setEjecutandoComparacion(false);
         }
+    }
+
+    // Ejecutar un algoritmo completo con animación
+    async function ejecutarAlgoritmoConAnimacion(algoritmo) {
+        return new Promise((resolve, reject) => {
+            limpiarRuta(false);
+            estado.current.start(algoritmo);
+            setIniciado(true);
+            setAnimacionTerminada(false);
+            animacionTerminadaRef.current = false;
+            
+            // Esperar a que la animación termine
+            const checkAnimacion = setInterval(() => {
+                if (!comparacionActiva.current) {
+                    clearInterval(checkAnimacion);
+                    reject(new Error("Comparación detenida"));
+                    return;
+                }
+                
+                if (animacionTerminadaRef.current) {
+                    clearInterval(checkAnimacion);
+                    const metricas = estado.current.algoritmo.obtenerMetricas();
+                    const longitudCamino = estado.current.calcularLongitudCamino();
+                    resolve({
+                        algoritmo,
+                        ...metricas,
+                        longitudCamino
+                    });
+                }
+            }, 100);
+        });
+    }
+
+    // Iniciar modo de comparación
+    async function iniciarModoComparacion() {
+        if (!nodoInicio || !nodoFin) {
+            ui.current.showSnack("Selecciona origen y destino primero", "warning");
+            return;
+        }
+
+        setEjecutandoComparacion(true);
+        comparacionActiva.current = true;
+        setResultadosComparacion([]);
+
+        const algoritmos = ["astar", "bfs", "dfs"];
+        const resultados = [];
+
+        try {
+            for (const algo of algoritmos) {
+                if (!comparacionActiva.current) break;
+                
+                const resultado = await ejecutarAlgoritmoConAnimacion(algo);
+                resultados.push(resultado);
+                setResultadosComparacion([...resultados]);
+                
+                // Esperar un poco antes del siguiente algoritmo
+                if (comparacionActiva.current) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+            
+            if (comparacionActiva.current) {
+                ui.current.showSnack("Comparación completada", "success");
+            }
+        } catch (error) {
+            // Comparación detenida
+        } finally {
+            setEjecutandoComparacion(false);
+            setIniciado(false);
+            comparacionActiva.current = false;
+        }
+    }
+
+    // Detener la comparación
+    function detenerComparacion() {
+        comparacionActiva.current = false;
+        setEjecutandoComparacion(false);
+        setIniciado(false);
+        limpiarRuta(false);
+        ui.current.showSnack("Comparación detenida", "info");
+    }
+
+    // Entrar en modo comparación
+    function entrarModoComparacion() {
+        setModoComparacion(true);
+        setResultadosComparacion([]);
+    }
+
+    // Salir del modo comparación
+    function salirModoComparacion() {
+        setModoComparacion(false);
+        setResultadosComparacion([]);
+        setEjecutandoComparacion(false);
+        limpiarRuta(true);
     }
 
     // Añadir nuevo nodo a la propiedad puntosRuta e incrementar temporizador
@@ -270,7 +374,10 @@ function Map() {
                     setDatosViajes([...puntosRuta.current]);
                     setTiempo(temporizador.current);
                 }
-                if (terminoRuta) setAnimacionTerminada(true);
+                if (terminoRuta) {
+                    setAnimacionTerminada(true);
+                    animacionTerminadaRef.current = true;
+                }
             }
 
             // Fase reproducción (cuando ya terminó)
@@ -408,6 +515,13 @@ function Map() {
                 changeRadius={cambiarRadio}
                 mostrarRadio={mostrarRadio}
                 setMostrarRadio={setMostrarRadio}
+                modoComparacion={modoComparacion}
+                entrarModoComparacion={entrarModoComparacion}
+                salirModoComparacion={salirModoComparacion}
+                iniciarComparacion={iniciarModoComparacion}
+                detenerComparacion={detenerComparacion}
+                resultadosComparacion={resultadosComparacion}
+                ejecutandoComparacion={ejecutandoComparacion}
             />
 
         </>

@@ -16,12 +16,14 @@ class BFS extends PathfindingAlgorithm {
     nextStep() {
         if (this.cola.length === 0) {
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [];
         }
 
         const nodosActualizados = [];
         const nodoActual = this.cola.shift(); // FIFO - First In First Out
         nodoActual.visitado = true;
+        this.nodosExplorados++;
         
         const aristaRef = nodoActual.aristas.find(a => 
             a.obtenerOtroNodo(nodoActual) === nodoActual.referente
@@ -32,6 +34,7 @@ class BFS extends PathfindingAlgorithm {
         if (nodoActual.id === this.nodoFin.id) {
             this.cola = [];
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [nodoActual];
         }
 

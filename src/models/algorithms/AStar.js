@@ -29,6 +29,7 @@ class AStar extends PathfindingAlgorithm {
     nextStep() {
         if(this.listaAbierta.isEmpty()) {
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [];
         }
 
@@ -36,6 +37,7 @@ class AStar extends PathfindingAlgorithm {
         const nodoActual = this.listaAbierta.pop();
         nodoActual.enHeap = false;
         nodoActual.visitado = true;
+        this.nodosExplorados++;
         
         const aristaRef = nodoActual.aristas.find(a => 
             a.obtenerOtroNodo(nodoActual) === nodoActual.referente
@@ -46,6 +48,7 @@ class AStar extends PathfindingAlgorithm {
         if(nodoActual.id === this.nodoFin.id) {
             this.listaAbierta.clear();
             this.finished = true;
+            this.tiempoFin = performance.now();
             return [nodoActual];
         }
 
